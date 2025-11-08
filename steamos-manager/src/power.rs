@@ -758,9 +758,6 @@ impl TdpManagerService {
         &mut self,
         identifier: impl AsRef<str>,
     ) -> Result<Option<OwnedFd>> {
-        if self.download_mode_limit.is_none() {
-            return Ok(None);
-        }
         let (send, recv) = pipe::pipe()?;
         let identifier = identifier.as_ref().to_string();
         self.download_handles
@@ -769,7 +766,10 @@ impl TdpManagerService {
             .or_insert(1);
         self.download_set
             .spawn(TdpManagerService::wait_on_handle(recv, identifier));
-        self.update_download_mode().await?;
+
+        if !self.download_mode_limit.is_none() {
+            self.update_download_mode().await?;
+        }
         Ok(Some(send.into_blocking_fd()?))
     }
 
