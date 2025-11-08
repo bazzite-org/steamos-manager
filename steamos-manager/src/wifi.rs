@@ -32,7 +32,7 @@ use crate::{path, read_config_directory};
 
 const OVERRIDE_CONTENTS: &str = "[Service]
 ExecStart=
-ExecStart=/usr/lib/iwd/iwd -d
+ExecStart=/usr/libexec/iwd/iwd -d
 ";
 const OVERRIDE_FOLDER: &str = "/etc/systemd/system/iwd.service.d";
 const OVERRIDE_PATH: &str = "/etc/systemd/system/iwd.service.d/99-valve-override.conf";
