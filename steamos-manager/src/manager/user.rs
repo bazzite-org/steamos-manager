@@ -36,9 +36,7 @@ use crate::job::JobManagerCommand;
 use crate::path;
 use crate::platform::platform_config;
 use crate::power::{
-    get_available_cpu_scaling_governors, get_available_platform_profiles, get_cpu_boost_state,
-    get_cpu_scaling_governor, get_max_charge_level, get_platform_profile, CpuSchedulerManager,
-    TdpManagerCommand,
+    CpuSchedulerManager, TdpManagerCommand, enable_power_features, get_available_cpu_scaling_governors, get_available_platform_profiles, get_cpu_boost_state, get_cpu_scaling_governor, get_max_charge_level, get_platform_profile
 };
 use crate::screenreader::{OrcaManager, ScreenReaderAction, ScreenReaderMode};
 use crate::session::{is_session_managed, valid_desktop_sessions, LoginMode, SessionManager};
@@ -1625,49 +1623,51 @@ pub(crate) async fn create_interfaces(
         object_server.at(MANAGER_PATH, wifi_debug_dump).await?;
     }
 
-    if get_max_charge_level().await.is_ok() {
-        object_server.at(MANAGER_PATH, battery_charge_limit).await?;
-    }
-
-    if get_cpu_boost_state().await.is_ok() {
-        object_server.at(MANAGER_PATH, cpu_boost).await?;
-    }
-
-    object_server.at(MANAGER_PATH, cpu_scaling).await?;
-    if CpuSchedulerManager::is_supported().await? {
-        object_server.at(MANAGER_PATH, cpu_scheduler).await?;
-    }
-
-    match gpu_performance_level_driver().await {
-        Ok(driver) => {
-            object_server
-                .at(
-                    MANAGER_PATH,
-                    GpuPerformanceLevel1 {
-                        proxy: proxy.clone(),
-                        driver,
-                        order: SerialOrderValidator::default(),
-                    },
-                )
-                .await?;
+    if enable_power_features().await {
+        if get_max_charge_level().await.is_ok() {
+            object_server.at(MANAGER_PATH, battery_charge_limit).await?;
         }
-        Err(e) => warn!("Can't add GpuPerformanceLevel1 interface: {e}"),
-    }
-
-    match gpu_power_profile_driver().await {
-        Ok(driver) => {
-            object_server
-                .at(
-                    MANAGER_PATH,
-                    GpuPowerProfile1 {
-                        proxy: proxy.clone(),
-                        driver,
-                        order: SerialOrderValidator::default(),
-                    },
-                )
-                .await?;
+    
+        if get_cpu_boost_state().await.is_ok() {
+            object_server.at(MANAGER_PATH, cpu_boost).await?;
         }
-        Err(e) => warn!("Can't add GpuPowerProfile1 interface: {e}"),
+    
+        object_server.at(MANAGER_PATH, cpu_scaling).await?;
+        if CpuSchedulerManager::is_supported().await? {
+            object_server.at(MANAGER_PATH, cpu_scheduler).await?;
+        }
+    
+        match gpu_performance_level_driver().await {
+            Ok(driver) => {
+                object_server
+                    .at(
+                        MANAGER_PATH,
+                        GpuPerformanceLevel1 {
+                            proxy: proxy.clone(),
+                            driver,
+                            order: SerialOrderValidator::default(),
+                        },
+                    )
+                    .await?;
+            }
+            Err(e) => warn!("Can't add GpuPerformanceLevel1 interface: {e}"),
+        }
+    
+        match gpu_power_profile_driver().await {
+            Ok(driver) => {
+                object_server
+                    .at(
+                        MANAGER_PATH,
+                        GpuPowerProfile1 {
+                            proxy: proxy.clone(),
+                            driver,
+                            order: SerialOrderValidator::default(),
+                        },
+                    )
+                    .await?;
+            }
+            Err(e) => warn!("Can't add GpuPowerProfile1 interface: {e}"),
+        }
     }
 
     if hdmi_cec.hdmi_cec.get_enabled_state().await.is_ok() {

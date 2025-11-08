@@ -20,6 +20,7 @@ use strum::{Display, EnumIter, EnumString, VariantNames};
 use tokio::fs::{self, try_exists, File};
 use tokio::io::{AsyncWriteExt, Interest};
 use tokio::net::unix::pipe;
+use tokio::process::Command;
 use tokio::sync::mpsc::UnboundedReceiver;
 use tokio::sync::{oneshot, Mutex, Notify, OnceCell};
 use tokio::task::JoinSet;
@@ -123,6 +124,9 @@ pub(crate) struct FirmwareAttributeLimitManager {
     performance_profile: Option<String>,
 }
 
+#[derive(Debug)]
+pub(crate) struct HhdTdpManager {}
+
 #[async_trait]
 pub(crate) trait TdpLimitManager: Send + Sync {
     async fn get_tdp_limit(&self) -> Result<u32>;
@@ -139,6 +143,15 @@ pub(crate) async fn tdp_limit_manager() -> Result<Box<dyn TdpLimitManager>> {
         .as_ref()
         .and_then(|config| config.tdp_limit.as_ref())
         .ok_or(anyhow!("No TDP limit configured"))?;
+
+    let hhd_status = get_hhd_status().await;
+
+    if hhd_status == HhdStatus::Active {
+        debug!("Using handheld daemon for TDP limiting");
+        return Ok(Box::new(HhdTdpManager {}));
+    } else if hhd_status == HhdStatus::Conflicts {
+        bail!("Conflicting TDP limiting method found");
+    }
 
     Ok(match &config.method {
         TdpLimitingMethod::FirmwareAttribute => {
@@ -626,6 +639,98 @@ impl TdpLimitManager for FirmwareAttributeLimitManager {
         } else {
             Ok(true)
         }
+    }
+}
+
+#[derive(PartialEq)]
+enum HhdStatus {
+    Inactive,
+    Active,
+    Conflicts,
+}
+
+async fn get_hhd_status() -> HhdStatus {
+    let output = Command::new("hhd.steamos")
+        .arg("steamos-tdp")
+        .arg("get")
+        .output()
+        .await;
+
+    if output.is_err() {
+        return HhdStatus::Inactive;
+    }
+
+    let code = output.unwrap().status.code().unwrap_or(0);
+    match code {
+        1 => HhdStatus::Inactive,
+        2 => HhdStatus::Conflicts,
+        _ => HhdStatus::Active,
+    }
+}
+
+pub(crate) async fn enable_power_features() -> bool {
+    let hhd_status = get_hhd_status().await;
+    hhd_status == HhdStatus::Inactive
+}
+
+impl HhdTdpManager {}
+
+#[async_trait]
+impl TdpLimitManager for HhdTdpManager {
+    async fn get_tdp_limit(&self) -> Result<u32> {
+        anyhow::bail!("Getting TDP from handheld daemon is not implemented.");
+    }
+
+    async fn set_tdp_limit(&self, limit: u32) -> Result<()> {
+        let output = Command::new("hhd.steamos")
+            .arg("steamos-tdp")
+            .arg(limit.to_string())
+            .output()
+            .await
+            .map_err(|e| anyhow!("Failed to execute hhd.steamos steamos-tdp {limit}: {e}"))?;
+
+        ensure!(
+            output.status.success(),
+            "hhd.steamos steamos-tdp exited with status {status}",
+            status = output.status
+        );
+
+        Ok(())
+    }
+
+    async fn get_tdp_limit_range(&self) -> Result<RangeInclusive<u32>> {
+        let output = Command::new("hhd.steamos")
+            .arg("steamos-tdp")
+            .arg("get")
+            .output()
+            .await
+            .map_err(|e| anyhow!("Failed to execute hhd.steamos steamos-tdp get: {e}"))?;
+
+        ensure!(
+            output.status.success(),
+            "hhd.steamos steamos-tdp get exited with status {status}",
+            status = output.status
+        );
+
+        let stdout = String::from_utf8(output.stdout)
+            .map_err(|e| anyhow!("Invalid UTF-8 from hhd.steamos steamos-tdp get: {e}"))?;
+
+        let mut parts = stdout.split_whitespace();
+        let min: u32 = parts
+            .next()
+            .ok_or_else(|| anyhow!("Missing min value"))?
+            .parse()
+            .map_err(|e| anyhow!("Failed to parse min value: {e}"))?;
+        let max: u32 = parts
+            .next()
+            .ok_or_else(|| anyhow!("Missing max value"))?
+            .parse()
+            .map_err(|e| anyhow!("Failed to parse max value: {e}"))?;
+        Ok(min..=max)
+    }
+
+    async fn is_active(&self) -> Result<bool> {
+        Ok(true)
     }
 }
 
