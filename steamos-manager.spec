@@ -81,9 +81,6 @@ install -m644 data/user/steamos-manager.service %{buildroot}%{_userunitdir}/
 # Create a symlink for the systemd service
 ln -s ../steamos-manager.service %{buildroot}%{_userunitdir}/gamescope-session-plus.service.wants/steamos-manager.service
 
-# we don't want this here
-rm %{buildroot}%{_bindir}/steamos-manager
-
 # Do post-installation
 %post
 %systemd_post steamos-manager.service
