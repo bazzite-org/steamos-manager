@@ -1510,14 +1510,7 @@ async fn create_device_interfaces(
         let low_power_mode = LowPowerMode1 {
             manager: manager.clone(),
         };
-        if config
-            .tdp_limit
-            .as_ref()
-            .and_then(|config| config.download_mode_limit)
-            .is_some()
-        {
-            object_server.at(MANAGER_PATH, low_power_mode).await?;
-        }
+        object_server.at(MANAGER_PATH, low_power_mode).await?;
 
         let object_server = object_server.clone();
         tokio::spawn(async move {
