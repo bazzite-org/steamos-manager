@@ -38,6 +38,7 @@ BuildRequires:  pkgconfig(xkbcommon)
 BuildRequires:  pkgconfig(libzstd)
 BuildRequires:  desktop-file-utils
 BuildRequires:  glib2-devel
+BuildRequires:  speech-dispatcher-devel
 
 %description
 
