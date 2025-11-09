@@ -3,6 +3,7 @@ name = "steamos-manager"
 version = "25.9.0"
 edition = "2021"
 repository = "https://gitlab.steamos.cloud/holo/steamos-manager/"
+license = "MIT"
 
 [dependencies]
 anyhow = "1"
