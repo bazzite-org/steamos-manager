@@ -13,7 +13,7 @@ cargo build -p steamos-manager
 $RSYNC target/debug/steamos-manager $HOST:
 
 ssh $HOST /bin/bash << EOF
-    sudo rpm-ostree usroverlay
+    sudo rpm-ostree usroverlay --hotfix
     sudo mv steamos-manager /usr/bin/steamos-manager
     sudo chmod +x /usr/bin/steamos-manager
     sudo chcon -R -u system_u -r object_r --type=bin_t /usr/bin/steamos-manager
