@@ -111,7 +111,7 @@ ln -s ../steamos-manager.service %{buildroot}%{_userunitdir}/gamescope-session-p
 %{_datadir}/steamos-manager/platform.toml
 %{_datadir}/dbus-1/interfaces/*
 
-%{_datadir}/dbus-1/services/com.steampowered.SteamOSManager1.service
+%{_datadir}/dbus-1/system-services/com.steampowered.SteamOSManager1.service
 %{_sysconfdir}/dbus-1/system.d/com.steampowered.SteamOSManager1.conf
 %{_unitdir}/steamos-manager.service
 # %{_unitdir}/steamos-manager-reset-oneshot-boot.conf
