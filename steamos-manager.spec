@@ -54,7 +54,9 @@ BuildRequires:  pkgconfig(libzstd)
 
 %install
 
+# See Makefile
 # Create the necessary directories
+install -d -m0755 %{buildroot}%{_datadir}/dbus-1/interfaces/
 install -d -m0755 %{buildroot}%{_datadir}/dbus-1/services/
 install -d -m0755 %{buildroot}%{_datadir}/dbus-1/system-services/
 install -d -m0755 %{buildroot}%{_sysconfdir}/dbus-1/system.d/
@@ -62,21 +64,23 @@ install -d -m0755 %{buildroot}%{_unitdir}/
 install -d -m0755 %{buildroot}%{_userunitdir}/gamescope-session-plus.service.wants/
 install -d -m0755 %{buildroot}%{_libdir}/
 
-# Install binaries
 install -D -m755 target/release/steamos-manager %{buildroot}%{_libdir}/steamos-manager
 install -D -m755 target/release/steamosctl %{buildroot}%{_bindir}/steamosctl
-
-# Install license
+install -D -m644 -t "%{buildroot}%{_datadir}/steamos-manager/devices" "data/devices/"*
 install -D -m644 LICENSE %{buildroot}%{_datadir}/licenses/%{name}/LICENSE
 
-# Install systemd and dbus service files
+install -m644 "data/platform.toml" "%{buildroot}%{_datadir}/steamos-manager/"
+install -D -m644 -t "%{buildroot}%{_datadir}/dbus-1/interfaces/" "data/interfaces/"*
+
 install -m644 data/system/com.steampowered.SteamOSManager1.service %{buildroot}%{_datadir}/dbus-1/system-services/
 install -m644 data/system/com.steampowered.SteamOSManager1.conf %{buildroot}%{_sysconfdir}/dbus-1/system.d/
 install -m644 data/system/steamos-manager.service %{buildroot}%{_unitdir}/
+#install -m644 "data/system/reset-oneshot-boot.conf" "$(DESTDIR)/usr/lib/systemd/system/sddm.service.d/"
 
-# Install user-specific systemd and dbus service files
 install -m644 data/user/com.steampowered.SteamOSManager1.service %{buildroot}%{_datadir}/dbus-1/services/
 install -m644 data/user/steamos-manager.service %{buildroot}%{_userunitdir}/
+install -m644 data/user/steamos-manager-session-cleanup.service %{buildroot}%{_userunitdir}/
+install -m644 data/user/orca.service %{buildroot}%{_userunitdir}/
 
 # Create a symlink for the systemd service
 ln -s ../steamos-manager.service %{buildroot}%{_userunitdir}/gamescope-session-plus.service.wants/steamos-manager.service
@@ -99,20 +103,23 @@ ln -s ../steamos-manager.service %{buildroot}%{_userunitdir}/gamescope-session-p
 %license cargo-vendor.txt
 %doc README.md
 
-# Binaries
 %{_bindir}/steamosctl
 %{_libdir}/steamos-manager
+%{_datadir}/steamos-manager/devices/*
+# license above
 
-# DBus Service Files
+%{_datadir}/steamos-manager/platform.toml
+%{_datadir}/dbus-1/interfaces/*
+
 %{_datadir}/dbus-1/services/com.steampowered.SteamOSManager1.service
-%{_datadir}/dbus-1/system-services/com.steampowered.SteamOSManager1.service
-
-# DBus Configuration Files
 %{_sysconfdir}/dbus-1/system.d/com.steampowered.SteamOSManager1.conf
-
-# Systemd Service Files
 %{_unitdir}/steamos-manager.service
+# %{_unitdir}/steamos-manager-reset-oneshot-boot.conf
+
+%{_datadir}/dbus-1/services/com.steampowered.SteamOSManager1.service
 %{_userunitdir}/steamos-manager.service
+%{_userunitdir}/steamos-manager-session-cleanup.service
+%{_userunitdir}/orca.service
 
 # Symlink for gamescope-session
 %{_userunitdir}/gamescope-session-plus.service.wants/steamos-manager.service
