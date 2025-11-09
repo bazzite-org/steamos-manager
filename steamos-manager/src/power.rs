@@ -24,7 +24,7 @@ use tokio::process::Command;
 use tokio::sync::mpsc::UnboundedReceiver;
 use tokio::sync::{oneshot, Mutex, Notify, OnceCell};
 use tokio::task::JoinSet;
-use tracing::{debug, error, warn};
+use tracing::{debug, error, info, warn};
 use zbus::Connection;
 
 use crate::gpu::AMDGPU_HWMON_NAME;
@@ -642,7 +642,7 @@ impl TdpLimitManager for FirmwareAttributeLimitManager {
     }
 }
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Debug)]
 enum HhdStatus {
     Inactive,
     Active,
@@ -670,6 +670,7 @@ async fn get_hhd_status() -> HhdStatus {
 
 pub(crate) async fn enable_power_features() -> bool {
     let hhd_status = get_hhd_status().await;
+    info!("Handheld daemon TDP status: {:?}", hhd_status);
     hhd_status == HhdStatus::Inactive
 }
 

@@ -1495,6 +1495,7 @@ async fn create_device_interfaces(
     proxy: &Proxy<'static>,
     object_server: &ObjectServer,
     tdp_manager: Option<UnboundedSender<TdpManagerCommand>>,
+    power_features: bool,
 ) -> Result<()> {
     let Some(config) = device_config().await? else {
         return Ok(());
@@ -1531,6 +1532,10 @@ async fn create_device_interfaces(
             }
             Ok::<(), Error>(())
         });
+    }
+
+    if !power_features {
+        return Ok(());
     }
 
     if let Some(config) = config.performance_profile.as_ref() {
@@ -1605,7 +1610,8 @@ pub(crate) async fn create_interfaces(
     let object_server = session.object_server();
     object_server.at(MANAGER_PATH, manager).await?;
 
-    create_device_interfaces(&proxy, object_server, tdp_manager).await?;
+    let power_features = enable_power_features().await;
+    create_device_interfaces(&proxy, object_server, tdp_manager, power_features).await?;
     create_platform_interfaces(&proxy, object_server, &system, &job_manager).await?;
 
     if device_type().await.unwrap_or_default() == "steam_deck" {
@@ -1623,7 +1629,7 @@ pub(crate) async fn create_interfaces(
         object_server.at(MANAGER_PATH, wifi_debug_dump).await?;
     }
 
-    if enable_power_features().await {
+    if power_features {
         if get_max_charge_level().await.is_ok() {
             object_server.at(MANAGER_PATH, battery_charge_limit).await?;
         }
