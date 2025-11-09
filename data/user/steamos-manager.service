@@ -1,6 +1,6 @@
 [Unit]
 Description=SteamOS Manager Daemon
-After=gamescope.service
+After=gamescope-session.target
 StartLimitIntervalSec=120
 StartLimitBurst=5
 
@@ -8,7 +8,7 @@ StartLimitBurst=5
 Type=notify-reload
 BusName=com.steampowered.SteamOSManager1
 Environment=RUST_LOG=info
-ExecStart=/usr/lib/steamos-manager
+ExecStart=/usr/lib64/steamos-manager
 Restart=on-failure
 RestartSec=1
 RestartMaxDelaySec=10
