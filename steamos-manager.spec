@@ -53,7 +53,7 @@ BuildRequires:  pkgconfig(libzstd)
 %{cargo_vendor_manifest}
 
 %install
-%cargo_install
+%cargo_install --path steamos-manager
 
 # Create the necessary directories
 install -d -m0755 %{buildroot}%{_datadir}/dbus-1/services/
