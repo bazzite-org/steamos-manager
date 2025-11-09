@@ -27,6 +27,9 @@ BuildRequires:  clang-devel
 BuildRequires:  cmake
 BuildRequires:  rust
 BuildRequires:  rust-std-static
+BuildRequires:  desktop-file-utils
+BuildRequires:  glib2-devel
+BuildRequires:  speech-dispatcher-devel
 BuildRequires:  pkgconfig(expat)
 BuildRequires:  pkgconfig(gbm)
 BuildRequires:  pkgconfig(dbus-1)
@@ -36,9 +39,6 @@ BuildRequires:  pkgconfig(libseat)
 BuildRequires:  pkgconfig(libudev)
 BuildRequires:  pkgconfig(xkbcommon)
 BuildRequires:  pkgconfig(libzstd)
-BuildRequires:  desktop-file-utils
-BuildRequires:  glib2-devel
-BuildRequires:  speech-dispatcher-devel
 
 %description
 
