@@ -79,7 +79,6 @@ install -m644 data/system/steamos-manager.service %{buildroot}%{_unitdir}/
 install -m644 data/user/com.steampowered.SteamOSManager1.service %{buildroot}%{_datadir}/dbus-1/services/
 install -m644 data/user/steamos-manager.service %{buildroot}%{_userunitdir}/
 install -m644 data/user/steamos-manager-session-cleanup.service %{buildroot}%{_userunitdir}/
-install -m644 data/user/orca.service %{buildroot}%{_userunitdir}/
 
 # Create a symlink for the systemd service
 ln -s ../steamos-manager.service %{buildroot}%{_userunitdir}/gamescope-session-plus.service.wants/steamos-manager.service
@@ -118,7 +117,6 @@ ln -s ../steamos-manager.service %{buildroot}%{_userunitdir}/gamescope-session-p
 %{_datadir}/dbus-1/services/com.steampowered.SteamOSManager1.service
 %{_userunitdir}/steamos-manager.service
 %{_userunitdir}/steamos-manager-session-cleanup.service
-%{_userunitdir}/orca.service
 
 # Symlink for gamescope-session
 %{_userunitdir}/gamescope-session-plus.service.wants/steamos-manager.service
