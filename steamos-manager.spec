@@ -62,9 +62,8 @@ install -d -m0755 %{buildroot}%{_datadir}/dbus-1/system-services/
 install -d -m0755 %{buildroot}%{_sysconfdir}/dbus-1/system.d/
 install -d -m0755 %{buildroot}%{_unitdir}/
 install -d -m0755 %{buildroot}%{_userunitdir}/gamescope-session-plus.service.wants/
-install -d -m0755 %{buildroot}%{_libdir}/
 
-install -D -m755 target/release/steamos-manager %{buildroot}%{_libdir}/steamos-manager
+install -D -m755 target/release/steamos-manager %{buildroot}%{_bindir}/steamos-manager
 install -D -m755 target/release/steamosctl %{buildroot}%{_bindir}/steamosctl
 install -D -m644 -t "%{buildroot}%{_datadir}/steamos-manager/devices" "data/devices/"*
 install -D -m644 LICENSE %{buildroot}%{_datadir}/licenses/%{name}/LICENSE
@@ -104,7 +103,7 @@ ln -s ../steamos-manager.service %{buildroot}%{_userunitdir}/gamescope-session-p
 %doc README.md
 
 %{_bindir}/steamosctl
-%{_libdir}/steamos-manager
+%{_bindir}/steamos-manager
 %{_datadir}/steamos-manager/devices/*
 # license above
 
