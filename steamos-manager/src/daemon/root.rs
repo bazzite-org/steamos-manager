@@ -19,7 +19,7 @@ use zbus::connection::{Builder, Connection};
 
 use crate::daemon::{channel, Daemon, DaemonCommand, DaemonContext};
 use crate::ds_inhibit::Inhibitor;
-use crate::inputplumber::DeckService;
+// use crate::inputplumber::DeckService;
 use crate::manager::root::SteamOSManager;
 use crate::path;
 use crate::power::SysfsWriterService;

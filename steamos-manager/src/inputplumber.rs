@@ -39,11 +39,13 @@ trait Target {
 }
 
 #[derive(Clone, Debug)]
+#[allow(dead_code)]
 pub struct DeckService {
     connection: Connection,
     composite_device_iface_name: OwnedInterfaceName,
 }
 
+#[allow(dead_code)]
 impl DeckService {
     pub fn init(connection: Connection) -> DeckService {
         DeckService {
