@@ -9,8 +9,8 @@ HOST=$1
 RSYNC="rsync -rv --exclude .git --exclude venv --exclude __pycache__'"
 USER=${2:-bazzite}
 
-cargo build --release
-$RSYNC target/release/steamos-manager $HOST:
+cargo build -p steamos-manager
+$RSYNC target/debug/steamos-manager $HOST:
 
 ssh $HOST /bin/bash << EOF
     sudo rpm-ostree usroverlay
