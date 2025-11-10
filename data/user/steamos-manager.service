@@ -1,7 +1,6 @@
 [Unit]
 Description=SteamOS Manager Daemon
-Before=gamescope-session.target
-Wants=gamescope-session.target
+Before=graphical-session.target
 Wants=hhd.service
 Wants=hhdl.service
 After=hhd.service
