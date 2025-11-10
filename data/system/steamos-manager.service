@@ -1,7 +1,9 @@
 [Unit]
 Description=SteamOS Manager Daemon
-Wants=steamos-log-submitter.service
-After=steamos-log-submitter.service
+Wants=hhd.service
+Wants=hhdl.service
+After=hhd.service
+After=hhdl.service
 StartLimitIntervalSec=120
 StartLimitBurst=5
 
