@@ -26,7 +26,7 @@ use crate::path;
 use crate::systemd::SystemdUnit;
 
 const CONFIG_PREFIX: &str = "/etc/sddm.conf.d";
-const SESSION_CHECK_PATH: &str = "steamos.conf";
+// const SESSION_CHECK_PATH: &str = "steamos.conf";
 const CONFIG_PATH: &str = "zz-steamos-autologin.conf";
 const TEMPORARY_CONFIG_PATH: &str = "zzt-steamos-temp-login.conf";
 
@@ -76,17 +76,17 @@ pub(crate) struct SessionManager {
     channel: Sender<DaemonCommand>,
 }
 
-pub(crate) async fn is_session_managed() -> Result<bool> {
-    Ok(try_exists(path(CONFIG_PREFIX).join(SESSION_CHECK_PATH)).await?)
-}
+// pub(crate) async fn is_session_managed() -> Result<bool> {
+//     Ok(try_exists(path(CONFIG_PREFIX).join(SESSION_CHECK_PATH)).await?)
+// }
 
-#[cfg(test)]
-pub(crate) async fn make_managed() -> Result<()> {
-    let check_path = path(CONFIG_PREFIX).join(SESSION_CHECK_PATH);
-    create_dir_all(check_path.parent().ok_or(anyhow!("Couldn't make dir"))?).await?;
-    write(check_path, "").await?;
-    Ok(())
-}
+// #[cfg(test)]
+// pub(crate) async fn make_managed() -> Result<()> {
+//     let check_path = path(CONFIG_PREFIX).join(SESSION_CHECK_PATH);
+//     create_dir_all(check_path.parent().ok_or(anyhow!("Couldn't make dir"))?).await?;
+//     write(check_path, "").await?;
+//     Ok(())
+// }
 
 fn is_valid_desktop_session_name(path: &str) -> bool {
     if path.starts_with('.') {

@@ -39,7 +39,7 @@ use crate::power::{
     CpuSchedulerManager, TdpManagerCommand, enable_power_features, get_available_cpu_scaling_governors, get_available_platform_profiles, get_cpu_boost_state, get_cpu_scaling_governor, get_max_charge_level, get_platform_profile
 };
 use crate::screenreader::{OrcaManager, ScreenReaderAction, ScreenReaderMode};
-use crate::session::{is_session_managed, valid_desktop_sessions, LoginMode, SessionManager};
+use crate::session::{valid_desktop_sessions, LoginMode, SessionManager};
 use crate::wifi::{
     get_wifi_backend, get_wifi_power_management_state, list_wifi_interfaces, WifiBackend,
 };
@@ -1686,9 +1686,9 @@ pub(crate) async fn create_interfaces(
         object_server.at(MANAGER_PATH, screen_reader1).await?;
     }
 
-    if is_session_managed().await? {
-        object_server.at(MANAGER_PATH, session_management).await?;
-    }
+    // if is_session_managed().await? {
+    //     object_server.at(MANAGER_PATH, session_management).await?;
+    // }
 
     if !list_wifi_interfaces().await.unwrap_or_default().is_empty() {
         object_server
