@@ -1636,22 +1636,6 @@ pub(crate) async fn create_interfaces(
             object_server.at(MANAGER_PATH, cpu_scheduler).await?;
         }
     
-        match gpu_performance_level_driver().await {
-            Ok(driver) => {
-                object_server
-                    .at(
-                        MANAGER_PATH,
-                        GpuPerformanceLevel1 {
-                            proxy: proxy.clone(),
-                            driver,
-                            order: SerialOrderValidator::default(),
-                        },
-                    )
-                    .await?;
-            }
-            Err(e) => warn!("Can't add GpuPerformanceLevel1 interface: {e}"),
-        }
-    
         match gpu_power_profile_driver().await {
             Ok(driver) => {
                 object_server
@@ -1667,6 +1651,22 @@ pub(crate) async fn create_interfaces(
             }
             Err(e) => warn!("Can't add GpuPowerProfile1 interface: {e}"),
         }
+    }
+    
+    match gpu_performance_level_driver().await {
+        Ok(driver) => {
+            object_server
+                .at(
+                    MANAGER_PATH,
+                    GpuPerformanceLevel1 {
+                        proxy: proxy.clone(),
+                        driver,
+                        order: SerialOrderValidator::default(),
+                    },
+                )
+                .await?;
+        }
+        Err(e) => warn!("Can't add GpuPerformanceLevel1 interface: {e}"),
     }
 
     if hdmi_cec.hdmi_cec.get_enabled_state().await.is_ok() {

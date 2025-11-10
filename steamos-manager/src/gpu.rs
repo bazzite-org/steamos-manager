@@ -18,10 +18,11 @@ use std::sync::LazyLock;
 use strum::{Display, EnumString, VariantNames};
 use tokio::fs::{self, try_exists, File};
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
+use tokio::process::Command;
 use tracing::{debug, error};
 
 use crate::hardware::{device_config, device_type};
-use crate::power::find_hwmon;
+use crate::power::{find_hwmon, HhdStatus, HHD_CMD};
 use crate::{path, write_synced};
 
 pub(crate) const AMDGPU_HWMON_NAME: &str = "amdgpu";
@@ -150,12 +151,139 @@ pub(crate) async fn gpu_power_profile_driver() -> Result<Box<dyn GpuPowerProfile
     })
 }
 
+async fn get_hhd_status() -> HhdStatus {
+    let output = Command::new(HHD_CMD)
+        .arg("steamos-gpu")
+        .arg("get")
+        .output()
+        .await;
+
+    if output.is_err() {
+        return HhdStatus::Inactive;
+    }
+
+    let code = output.unwrap().status.code().unwrap_or(0);
+    match code {
+        1 => HhdStatus::Inactive,
+        2 => HhdStatus::Conflicts,
+        _ => HhdStatus::Active,
+    }
+}
+
+#[derive(Debug)]
+pub(crate) struct HhdPerformanceLevelDriver {}
+
+impl AmdgpuGpuPerfDriver for HhdPerformanceLevelDriver {}
+
+#[async_trait]
+impl GpuPerformanceLevelDriver for HhdPerformanceLevelDriver {
+    fn performance_level_from_str(&self, value: &str) -> Result<GpuPerformanceLevel> {
+        Ok(GpuPerformanceLevel::Intel(IntelPerformanceLevel::from_str(
+            value,
+        )?))
+    }
+
+    async fn get_available_performance_levels(&self) -> Result<Vec<GpuPerformanceLevel>> {
+        Ok(vec![
+            GpuPerformanceLevel::Intel(IntelPerformanceLevel::Auto),
+            GpuPerformanceLevel::Intel(IntelPerformanceLevel::Manual),
+        ])
+    }
+
+    async fn get_performance_level(&self) -> Result<GpuPerformanceLevel> {
+        // Just lie so that we always get a trigger to auto
+        Ok(GpuPerformanceLevel::Intel(IntelPerformanceLevel::Manual))
+    }
+
+    async fn get_clocks(&self) -> Result<u32> {
+        // Dummy value
+        Ok(1200)
+    }
+
+    async fn set_performance_level(&self, level: GpuPerformanceLevel) -> Result<()> {
+        if level == GpuPerformanceLevel::Intel(IntelPerformanceLevel::Manual) {
+            return Ok(());
+        }
+        let output = Command::new(HHD_CMD)
+            .arg("steamos-gpu")
+            .arg("clear")
+            .output()
+            .await
+            .map_err(|e| anyhow!("Failed to clear gpu limit: {e}"))?;
+
+        ensure!(
+            output.status.success(),
+            "hhd.steamos steamos-tdp exited with status {status}",
+            status = output.status
+        );
+
+        Ok(())
+    }
+
+    async fn get_clocks_range(&self) -> Result<RangeInclusive<u32>> {
+        let output = Command::new(HHD_CMD)
+            .arg("steamos-gpu")
+            .arg("get")
+            .output()
+            .await
+            .map_err(|e| anyhow!("Failed to execute hhd.steamos steamos-tdp get: {e}"))?;
+
+        ensure!(
+            output.status.success(),
+            "hhd.steamos get exited with status {status}",
+            status = output.status
+        );
+
+        let stdout = String::from_utf8(output.stdout)
+            .map_err(|e| anyhow!("Invalid UTF-8 from hhd.steamos steamos-tdp get: {e}"))?;
+
+        let mut parts = stdout.split_whitespace();
+        let min: u32 = parts
+            .next()
+            .ok_or_else(|| anyhow!("Missing min value"))?
+            .parse()
+            .map_err(|e| anyhow!("Failed to parse min value: {e}"))?;
+        let max: u32 = parts
+            .next()
+            .ok_or_else(|| anyhow!("Missing max value"))?
+            .parse()
+            .map_err(|e| anyhow!("Failed to parse max value: {e}"))?;
+        Ok(min..=max)
+    }
+
+    async fn set_clocks(&self, clocks: u32) -> Result<()> {
+        let output = Command::new(HHD_CMD)
+            .arg("steamos-gpu")
+            .arg(clocks.to_string())
+            .output()
+            .await
+            .map_err(|e| anyhow!("Failed to execute hhd.steamos steamos-tdp {clocks}: {e}"))?;
+
+        ensure!(
+            output.status.success(),
+            "hhd.steamos steamos-tdp exited with status {status}",
+            status = output.status
+        );
+
+        Ok(())
+    }
+}
+
 pub(crate) async fn gpu_performance_level_driver() -> Result<Box<dyn GpuPerformanceLevelDriver>> {
     let config = device_config().await?;
     let config = config
         .as_ref()
         .and_then(|config| config.gpu_performance.as_ref())
         .ok_or(anyhow!("No GPU power profile driver configured"))?;
+
+    let hhd_status = get_hhd_status().await;
+
+    if hhd_status == HhdStatus::Active {
+        debug!("Using handheld daemon for TDP limiting");
+        return Ok(Box::new(HhdPerformanceLevelDriver {}));
+    } else if hhd_status == HhdStatus::Conflicts {
+        bail!("Conflicting GPU controls found");
+    }
 
     Ok(match &config.driver {
         GpuPerformanceLevelDriverType::Amdgpu => Box::new(AmdgpuPerformanceLevelDriver {}),

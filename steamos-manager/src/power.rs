@@ -643,14 +643,16 @@ impl TdpLimitManager for FirmwareAttributeLimitManager {
 }
 
 #[derive(PartialEq, Debug)]
-enum HhdStatus {
+pub(crate) enum HhdStatus {
     Inactive,
     Active,
     Conflicts,
 }
 
+pub(crate) const HHD_CMD: &str = "hhd.steamos"; // "/home/bazzite/hhd-dev/hhd/venv/bin/hhd.steamos";
+
 async fn get_hhd_status() -> HhdStatus {
-    let output = Command::new("hhd.steamos")
+    let output = Command::new(HHD_CMD)
         .arg("steamos-tdp")
         .arg("get")
         .output()
@@ -683,7 +685,7 @@ impl TdpLimitManager for HhdTdpManager {
     }
 
     async fn set_tdp_limit(&self, limit: u32) -> Result<()> {
-        let output = Command::new("hhd.steamos")
+        let output = Command::new(HHD_CMD)
             .arg("steamos-tdp")
             .arg(limit.to_string())
             .output()
@@ -700,7 +702,7 @@ impl TdpLimitManager for HhdTdpManager {
     }
 
     async fn get_tdp_limit_range(&self) -> Result<RangeInclusive<u32>> {
-        let output = Command::new("hhd.steamos")
+        let output = Command::new(HHD_CMD)
             .arg("steamos-tdp")
             .arg("get")
             .output()
