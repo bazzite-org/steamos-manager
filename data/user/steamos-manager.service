@@ -3,8 +3,10 @@ Description=SteamOS Manager Daemon
 Before=graphical-session.target
 Wants=hhd.service
 Wants=hhdl.service
+Wants=gamescope-session-plus@steam.service
 After=hhd.service
 After=hhdl.service
+Before=gamescope-session-plus@steam.service
 StartLimitIntervalSec=120
 StartLimitBurst=5
 
