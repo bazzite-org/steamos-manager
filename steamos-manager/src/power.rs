@@ -138,12 +138,6 @@ pub(crate) trait TdpLimitManager: Send + Sync {
 }
 
 pub(crate) async fn tdp_limit_manager() -> Result<Box<dyn TdpLimitManager>> {
-    let config = device_config().await?;
-    let config = config
-        .as_ref()
-        .and_then(|config| config.tdp_limit.as_ref())
-        .ok_or(anyhow!("No TDP limit configured"))?;
-
     let hhd_status = get_hhd_status().await;
 
     if hhd_status == HhdStatus::Active {
@@ -152,6 +146,12 @@ pub(crate) async fn tdp_limit_manager() -> Result<Box<dyn TdpLimitManager>> {
     } else if hhd_status == HhdStatus::Conflicts {
         bail!("Conflicting TDP limiting method found");
     }
+
+    let config = device_config().await?;
+    let config = config
+        .as_ref()
+        .and_then(|config| config.tdp_limit.as_ref())
+        .ok_or(anyhow!("No TDP limit configured"))?;
 
     Ok(match &config.method {
         TdpLimitingMethod::FirmwareAttribute => {
@@ -806,11 +806,14 @@ impl TdpManagerService {
         system: &Connection,
         session: &Connection,
     ) -> Result<TdpManagerService> {
-        let config = device_config().await?;
-        let config = config
-            .as_ref()
-            .and_then(|config| config.tdp_limit.as_ref())
-            .ok_or(anyhow!("No TDP limit configured"))?;
+        let config = device_config().await;
+        let download_mode_limit = match config {
+            Ok(Some(config)) => config
+                .tdp_limit
+                .as_ref()
+                .and_then(|tdp| tdp.download_mode_limit),
+            _ => None,
+        };
 
         let manager = tdp_limit_manager().await?;
         let proxy = RootManagerProxy::new(system).await?;
@@ -822,7 +825,7 @@ impl TdpManagerService {
             download_set: JoinSet::new(),
             download_handles: HashMap::new(),
             previous_limit: None,
-            download_mode_limit: config.download_mode_limit,
+            download_mode_limit,
             manager,
         })
     }

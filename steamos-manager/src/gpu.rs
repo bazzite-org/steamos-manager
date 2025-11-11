@@ -270,12 +270,6 @@ impl GpuPerformanceLevelDriver for HhdPerformanceLevelDriver {
 }
 
 pub(crate) async fn gpu_performance_level_driver() -> Result<Box<dyn GpuPerformanceLevelDriver>> {
-    let config = device_config().await?;
-    let config = config
-        .as_ref()
-        .and_then(|config| config.gpu_performance.as_ref())
-        .ok_or(anyhow!("No GPU power profile driver configured"))?;
-
     let hhd_status = get_hhd_status().await;
 
     if hhd_status == HhdStatus::Active {
@@ -284,6 +278,12 @@ pub(crate) async fn gpu_performance_level_driver() -> Result<Box<dyn GpuPerforma
     } else if hhd_status == HhdStatus::Conflicts {
         bail!("Conflicting GPU controls found");
     }
+
+    let config = device_config().await?;
+    let config = config
+        .as_ref()
+        .and_then(|config| config.gpu_performance.as_ref())
+        .ok_or(anyhow!("No GPU power profile driver configured"))?;
 
     Ok(match &config.driver {
         GpuPerformanceLevelDriverType::Amdgpu => Box::new(AmdgpuPerformanceLevelDriver {}),

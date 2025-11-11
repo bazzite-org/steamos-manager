@@ -1497,10 +1497,6 @@ async fn create_device_interfaces(
     tdp_manager: Option<UnboundedSender<TdpManagerCommand>>,
     power_features: bool,
 ) -> Result<()> {
-    let Some(config) = device_config().await? else {
-        return Ok(());
-    };
-
     let performance_profile = PerformanceProfile1 {
         proxy: proxy.clone(),
         tdp_limit_manager: tdp_manager.clone(),
@@ -1530,6 +1526,10 @@ async fn create_device_interfaces(
     if !power_features {
         return Ok(());
     }
+
+    let Some(config) = device_config().await? else {
+        return Ok(());
+    };
 
     if let Some(config) = config.performance_profile.as_ref() {
         if !get_available_platform_profiles(&config.platform_profile_name)
