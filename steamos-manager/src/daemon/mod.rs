@@ -133,6 +133,7 @@ impl<C: DaemonContext> Daemon<C> {
         token
     }
 
+    #[allow(dead_code)]
     pub(crate) fn get_connection(&self) -> Connection {
         self.connection.clone()
     }

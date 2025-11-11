@@ -57,6 +57,7 @@ async fn setup_traces(base: &Path) -> Result<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 impl Ftrace {
     pub async fn init(connection: &Connection) -> Result<Ftrace> {
         let path = Self::base();

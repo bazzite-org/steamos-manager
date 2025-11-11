@@ -23,7 +23,7 @@ use crate::ds_inhibit::Inhibitor;
 use crate::manager::root::SteamOSManager;
 use crate::path;
 use crate::power::SysfsWriterService;
-use crate::sls::ftrace::Ftrace;
+// use crate::sls::ftrace::Ftrace;
 use crate::sls::{LogLayer, LogReceiver};
 
 #[derive(Copy, Clone, Default, Deserialize, Debug)]
@@ -123,9 +123,9 @@ impl DaemonContext for RootContext {
     ) -> Result<()> {
         self.state = state;
 
-        let connection = daemon.get_connection();
-        let ftrace = Ftrace::init(&connection).await?;
-        daemon.add_service(ftrace);
+        // let connection = daemon.get_connection();
+        // let ftrace = Ftrace::init(&connection).await?;
+        // daemon.add_service(ftrace);
 
         // let ip = DeckService::init(connection);
         // daemon.add_service(ip);
