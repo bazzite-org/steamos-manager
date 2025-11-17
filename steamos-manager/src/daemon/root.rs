@@ -79,21 +79,21 @@ impl RootContext {
         }
     }
 
-    async fn reload_ds_inhibit(&mut self, daemon: &mut Daemon<RootContext>) -> Result<()> {
-        match (
-            self.state.services.ds_inhibit.enabled,
-            self.ds_inhibit.as_ref(),
-        ) {
-            (false, Some(handle)) => {
-                handle.cancel();
-                self.ds_inhibit = None;
-            }
-            (true, None) => {
-                let inhibitor = Inhibitor::init().await?;
-                self.ds_inhibit = Some(daemon.add_service(inhibitor));
-            }
-            _ => (),
-        }
+    async fn reload_ds_inhibit(&mut self, _daemon: &mut Daemon<RootContext>) -> Result<()> {
+        // match (
+        //     self.state.services.ds_inhibit.enabled,
+        //     self.ds_inhibit.as_ref(),
+        // ) {
+        //     (false, Some(handle)) => {
+        //         handle.cancel();
+        //         self.ds_inhibit = None;
+        //     }
+        //     (true, None) => {
+        //         let inhibitor = Inhibitor::init().await?;
+        //         self.ds_inhibit = Some(daemon.add_service(inhibitor));
+        //     }
+        //     _ => (),
+        // }
         Ok(())
     }
 }
